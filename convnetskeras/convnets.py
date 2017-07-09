@@ -19,6 +19,8 @@ from keras.optimizers import SGD
 from scipy.misc import imread
 from scipy.misc import imresize
 
+import keras.backend as K
+
 
 def convnet(network, weights_path=None, heatmap=False, trainable=None):
     """
@@ -76,6 +78,9 @@ def convnet(network, weights_path=None, heatmap=False, trainable=None):
                 new_W = new_W[:, :, ::-1, ::-1]
                 layer.set_weights([new_W, b])
         return convnet_heatmap
+
+    K.set_image_dim_ordering('th')
+
 
     # Select the network
     convnet_init = __get_model_based_on_input_network(network)
@@ -340,7 +345,7 @@ def _demo_heatmap_script():
 
     # Test pretrained model
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-    model = convnet('alexnet', weights_path='weights/alexnet_weights.h5', heatmap=True)
+    model = convnet('alexnet', weights_path='convnetskeras/weights/alexnet_weights.h5', heatmap=True)
     model.compile(optimizer=sgd, loss='mse')
 
     out = model.predict(im)
@@ -349,8 +354,8 @@ def _demo_heatmap_script():
     # Most of the synsets are not in the subset of the synsets used in ImageNet recognition task.
     ids = np.array([id_ for id_ in synset_to_dfs_ids(s) if id_ is not None])
     heatmap = out[0, ids, :, :].sum(axis=0)
-    return heatmap
+    return model
 
 
 if __name__ == '__main__':
-    _demo_heatmap_script()
+    model = _demo_heatmap_script()
